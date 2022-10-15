@@ -10,7 +10,7 @@ class Plugin:
     commands = []
 
     def process(self, text):
-
+        text = text.split(" ", 1)[1]
         if "plus" in text:
             result = self.text2int(text.split("plus")[0]) + self.text2int(text.split("plus")[1])
             tts.speak(num2words(result))

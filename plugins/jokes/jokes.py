@@ -9,6 +9,7 @@ import main
 class Plugin:
 
     name = "jokes"
+    keywords = ["jokes"]
     author = "neb"
     version = 0.01
     commands = ["spam"]
@@ -16,6 +17,7 @@ class Plugin:
     spamEnabled = False
 
     def process(self, text):
+        text = text.split(" ", 1)[1]
         print("Plugin running: " + self.name)
         if text not in self.commands:
             print("Invalid command")
