@@ -99,9 +99,10 @@ class ChromaApplication:
 
                         # If the first word is a keyword, then it will start a new thread which
                         # runs the associated plugin
+                        # However, if not first word, check if the boolean is false
                         for eachKeyword in self.possibleKeywords:
                             if eachKeyword in text:
-                                if self.possibleKeywords.get(eachKeyword):
+                                if text.index(eachKeyword) == 0:
                                     threading.Thread(
                                         target=next(x for x in self._plugins if eachKeyword in x.keywords).process,
                                         args=(text,),
