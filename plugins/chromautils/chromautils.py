@@ -1,11 +1,12 @@
 import os
 import _thread
 import webbrowser
+import chromaapplication
 
 
 class Plugin:
     name = "chromautils"
-    keywords = ["chromautils", "open", "exit"]
+    keywords = ["chromautils", "open", "exit", "dictate", "opening"]
     author = "neb"
     version = 0.01
     commands = []
@@ -19,11 +20,13 @@ class Plugin:
                     "fox four", "fox four" "thoughts for", "packs for", "thanks for", "fire spoiler"}
 
     def process(self, text):
-
-        if text.split(" ")[0] == "open":
+        text = text.lower()
+        if text.split(" ")[0] == "open" or text.split(" ")[0] == "opening":
             self.open_program(text)
         if text.split(" ")[0] == "exit":
             self.exit()
+        if text.split(" ")[0] == "dictate":
+            self.dictate()
 
     def open_program(self, text):
         newText = text.split(" ", 1)[1]
@@ -44,3 +47,6 @@ class Plugin:
 
     def exit(self):
         _thread.interrupt_main()
+
+    def dictate(self):
+        chromaapplication.dictate = True

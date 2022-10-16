@@ -3,7 +3,7 @@ import tts
 
 
 class Plugin:
-    name = "math"
+    name = "chromamath"
     keywords = ["math"]
     author = "neb"
     version = 0.01

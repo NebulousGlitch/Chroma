@@ -1,15 +1,14 @@
-import os
 import random
 import time
 import keyboard
 
-import main
+import tts
 
 
 class Plugin:
 
-    name = "jokes"
-    keywords = ["jokes"]
+    name = "chromajokes"
+    keywords = ["jokes", "tell me a joke"]
     author = "neb"
     version = 0.01
     commands = ["spam"]
@@ -17,9 +16,8 @@ class Plugin:
     spamEnabled = False
 
     def process(self, text):
-        text = text.split(" ", 1)[1]
         print("Plugin running: " + self.name)
-        if text not in self.commands:
+        if text not in self.keywords:
             print("Invalid command")
 
         else:
@@ -30,9 +28,11 @@ class Plugin:
                     self.spamEnabled = False
 
                 self.spam()
+            if text == "tell me a joke":
+                self.tell_me_a_joke()
 
     def spam(self):
-        jokes = open("./plugins/jokes/jokes.txt", encoding="utf8")
+        jokes = open("./plugins/chromajokes/jokes.txt", encoding="utf8")
         jokesList = jokes.readlines()
         while self.spamEnabled:
             randIndex = random.randrange(0, len(jokesList) - 1)
@@ -43,4 +43,13 @@ class Plugin:
             keyboard.press("Enter")
             time.sleep(2)
 
+    def tell_me_a_joke(self):
+        jokesList = ""
+        print("Running tell me a joke")
+        with open("./plugins/chromajokes/jokes.txt", encoding="utf8") as j:
+            jokesList = j.readlines()
+        randIndex = random.randrange(0, len(jokesList) - 1)
+        tts.speak(jokesList[randIndex].split("<>")[0])
+        time.sleep(1)
+        tts.speak(jokesList[randIndex].split("<>")[1])
 

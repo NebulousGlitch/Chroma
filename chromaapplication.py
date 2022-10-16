@@ -1,16 +1,33 @@
 import importlib
 import threading
-from vosk import Model, KaldiRecognizer
+import time
+import keyboard
+from vosk import Model, KaldiRecognizer, SetLogLevel
 from pyaudio import PyAudio, paInt16
 from playsound import playsound
+from sys import getsizeof
+
+# When set to true, program loop will enter a dictate mode where the keyboard types what the user is saying
+dictate: bool = False
+
+# A dictionary with commonly misspelled names / programs / words
+listOfMisspells: dict = {"spot a thigh": "Spotify", "spot of i": "Spotify", "spot if i": "Spotify",
+                         "spot a fire": "Spotify", "bonafide": "Spotify", "spot of fi": "Spotify",
+                         "to escort": "discord", "a bolton": "Ableton", "able to": "Ableton", "calculate": "Calculator",
+                         "spot i": "Spotify", "hoping": "open", "mark a player": "Markiplier", "market blair": "Markiplier",
+                         "you too": "Youtube", "you tube": "Youtube", "birch": "search", "you to": "Youtube", "explore": "Explorer"}
+print("Allocated bytes for dictionary: {}".format(getsizeof(listOfMisspells)))
+
+# Able to access what the current word stream up until the final result
+currentWordStream: str = ""
 
 
 class ChromaApplication:
+    SetLogLevel(-1)
     model = Model("./models/vosk-model-small-en-us-0.15")
     recognizer = KaldiRecognizer(model, 16000)
-
     mic = PyAudio()
-    stream = mic.open(format=paInt16, channels=1, rate=16000, input=True, frames_per_buffer=8192)
+    stream = mic.open(format=paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4096)
     stream.stop_stream()
 
     possibleKeywords = set()
@@ -24,47 +41,90 @@ class ChromaApplication:
                 importlib.import_module(plugin, "./plugins/" + plugin).Plugin() for plugin in plugins
             ]
 
-            #generate a set of keywords for quick search
+            # generate a set of keywords for quick search
             for eachPlugin in self._plugins:
                 for eachKeyword in eachPlugin.keywords:
                     if eachKeyword not in self.possibleKeywords:
                         self.possibleKeywords.add(eachKeyword)
+                        print(eachKeyword)
 
     def run(self, stream=stream, recognizer=recognizer):
+
+        global dictate
+        global currentWordStream
 
         print("Starting my application")
         print("-" * 10)
         print("Running with the following plugins:")
 
         for plugin in self._plugins:
-            print(plugin)
+            print("{} by {}".format(plugin.name.upper(), plugin.author))
 
         print("-" * 10)
         # print("Ending my application")
         print()
 
         while True:
-            if stream.is_active():
+            if dictate is True:
+                if stream.is_stopped():
+                    stream.start_stream()
                 data = stream.read(4096, exception_on_overflow=False)
                 if recognizer.AcceptWaveform(data):
-                    stream.stop_stream()
                     text = recognizer.Result()[14:-3]
-                    print(text)
+                    if text == "dictate":
+                        dictate = False
+                        stream.stop_stream()
+                        playsound("./assets/sfx/voiceoff.mp3", False)
+                    else:
+                        keyboard.write(text + " ")
 
-                    if text.split(" ")[0] in self.possibleKeywords:
-                        x = threading.Thread(target=next(x for x in self._plugins if text.split(" ")[0] in x.keywords).process,
-                                             args=(text,),
-                                             daemon=True)
-                        x.start()
+            else:
+                if stream.is_active():
+                    data: bytes = stream.read(4096, exception_on_overflow=False)
 
-                    playsound("./assets/sfx/voiceoff.mp3", False)
+                    if recognizer.AcceptWaveform(data):
+
+                        text: str = recognizer.Result()[14:-3]
+
+                        print("\nPreliminary Result: {}".format(text))
+
+                        # Replacing each misspelled word with the correct word
+                        start: int = time.perf_counter_ns()
+                        for eachWord in (x for x in listOfMisspells if text.count(x) > 0):
+                            text = text.replace(eachWord, listOfMisspells.get(eachWord))
+
+                        print("Time taken to replace words: {} nanoseconds".format(time.perf_counter_ns() - start))
+                        print("Final Result: {}".format(text))
+
+                        # If the first word is a keyword, then it will start a new thread which
+                        # runs the associated plugin
+                        for eachKeyword in self.possibleKeywords:
+                            if eachKeyword in text:
+
+                                x = threading.Thread(
+                                    target=next(x for x in self._plugins if eachKeyword in x.keywords).process,
+                                    args=(text,),
+                                    daemon=True)
+                                x.start()
+                                break
+
+
+                        currentWordStream = ""
+                        stream.stop_stream()
+                        playsound("./assets/sfx/voiceoff.mp3", False)
+
+                    else:
+                        if (recognizer.PartialResult()[17:-3]).split(" ")[-1] not in currentWordStream:
+                            currentWordStream = currentWordStream + (recognizer.PartialResult()[17:-3]).split(" ")[
+                                -1] + " "
+                            print(currentWordStream)
 
     def enable_mic(self):
+        if not dictate:
+            if self.stream.is_stopped():
+                self.stream.start_stream()
+                playsound("./assets/sfx/voiceon.mp3", False)
 
-        if self.stream.is_stopped():
-            self.stream.start_stream()
-            playsound("./assets/sfx/voiceon.mp3", False)
-
-        else:
-            self.stream.stop_stream()
-            playsound("./assets/sfx/voiceoff.mp3", False)
+            else:
+                self.stream.stop_stream()
+                playsound("./assets/sfx/voiceoff.mp3", False)
