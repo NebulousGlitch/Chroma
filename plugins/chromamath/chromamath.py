@@ -4,7 +4,7 @@ import tts
 
 class Plugin:
     name = "chromamath"
-    keywords = ["math"]
+    keywords = {"math": True}
     author = "neb"
     version = 0.01
     commands = []

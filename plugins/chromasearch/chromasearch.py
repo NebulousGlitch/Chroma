@@ -4,10 +4,10 @@ import webbrowser
 
 class Plugin:
     name = "chromasearch"
-    keywords = ["search"]
+    keywords = {"search": True}
     author = "neb"
     version = 0.01
-    commands = ["google", "youtube", "wikipedia"]
+    commands = []
 
     def process(self, text):
         print("Plugin running: " + self.name)

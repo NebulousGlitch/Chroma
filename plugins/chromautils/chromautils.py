@@ -2,11 +2,14 @@ import os
 import _thread
 import webbrowser
 import chromaapplication
+from pydictionary import Dictionary
+
+import tts
 
 
 class Plugin:
     name = "chromautils"
-    keywords = ["chromautils", "open", "exit", "dictate", "opening"]
+    keywords = {"chromautils":True, "open":True, "exit":True, "dictate":True, "opening":True, "definition of":False, "define":True}
     author = "neb"
     version = 0.01
     commands = []
@@ -27,6 +30,19 @@ class Plugin:
             self.exit()
         if text.split(" ")[0] == "dictate":
             self.dictate()
+        if "definition of" in text or "define" in text.split(" ")[0]:
+            if "definition of" in text:
+                print(text.split("definition of ")[1])
+                self.define((text.split("definition of ")[1]))
+
+            else:
+                print("".join((text.split("define ")[1])))
+                self.define("".join((text.split("define ")[1])))
+
+    def define(self, word):
+        definition = Dictionary(word, 1)
+        print(definition.meanings())
+        tts.speak(definition.meanings())
 
     def open_program(self, text):
         newText = text.split(" ", 1)[1]

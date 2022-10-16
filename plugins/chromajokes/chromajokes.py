@@ -8,7 +8,7 @@ import tts
 class Plugin:
 
     name = "chromajokes"
-    keywords = ["jokes", "tell me a joke"]
+    keywords = {"jokes":True, "tell me a joke":True}
     author = "neb"
     version = 0.01
     commands = ["spam"]

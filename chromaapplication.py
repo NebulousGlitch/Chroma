@@ -30,7 +30,7 @@ class ChromaApplication:
     stream = mic.open(format=paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4096)
     stream.stop_stream()
 
-    possibleKeywords = set()
+    possibleKeywords = {}
 
     # constructor for application which takes a list of plugins
     def __init__(self, plugins: list = []):
@@ -41,12 +41,13 @@ class ChromaApplication:
                 importlib.import_module(plugin, "./plugins/" + plugin).Plugin() for plugin in plugins
             ]
 
-            # generate a set of keywords for quick search
+            # Generate a dictionary of keywords containing the keyword and boolean
+            # If the boolean is True, then the keyword MUST be in the beginning of the text
+            # in order for the plugin to start
             for eachPlugin in self._plugins:
                 for eachKeyword in eachPlugin.keywords:
                     if eachKeyword not in self.possibleKeywords:
-                        self.possibleKeywords.add(eachKeyword)
-                        print(eachKeyword)
+                        self.possibleKeywords[eachKeyword] = eachPlugin.keywords.get(eachKeyword)
 
     def run(self, stream=stream, recognizer=recognizer):
 
@@ -90,7 +91,7 @@ class ChromaApplication:
 
                         # Replacing each misspelled word with the correct word
                         start: int = time.perf_counter_ns()
-                        for eachWord in (x for x in listOfMisspells if text.count(x) > 0):
+                        for eachWord in (x for x in listOfMisspells if " {} ".format(x) in " {} ".format(text)):
                             text = text.replace(eachWord, listOfMisspells.get(eachWord))
 
                         print("Time taken to replace words: {} nanoseconds".format(time.perf_counter_ns() - start))
@@ -100,14 +101,18 @@ class ChromaApplication:
                         # runs the associated plugin
                         for eachKeyword in self.possibleKeywords:
                             if eachKeyword in text:
-
-                                x = threading.Thread(
-                                    target=next(x for x in self._plugins if eachKeyword in x.keywords).process,
-                                    args=(text,),
-                                    daemon=True)
-                                x.start()
-                                break
-
+                                if self.possibleKeywords.get(eachKeyword):
+                                    threading.Thread(
+                                        target=next(x for x in self._plugins if eachKeyword in x.keywords).process,
+                                        args=(text,),
+                                        daemon=True).start()
+                                    break
+                                elif not self.possibleKeywords.get(eachKeyword):
+                                    threading.Thread(
+                                        target=next(x for x in self._plugins if eachKeyword in x.keywords).process,
+                                        args=(text,),
+                                        daemon=True).start()
+                                    break
 
                         currentWordStream = ""
                         stream.stop_stream()
