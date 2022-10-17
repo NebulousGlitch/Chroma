@@ -20,7 +20,7 @@ listOfMisspells: dict = {"spot a thigh": "Spotify", "spot of i": "Spotify", "spo
                          "market blair": "Markiplier", "spot a fight": "Spotify", "spot a hi": "Spotify",
                          "you too": "Youtube", "you tube": "Youtube", "birch": "search", "you to": "Youtube",
                          "explore": "Explorer"}
-print("Allocated bytes for dictionary: {}".format(getsizeof(listOfMisspells)))
+print(f"Allocated bytes for dictionary: {getsizeof(listOfMisspells)}")
 
 # Able to access what the current word stream up until the final result
 currentWordStream: str = ""
@@ -60,7 +60,7 @@ class ChromaApplication:
         print("Running with the following plugins:")
 
         for plugin in self._plugins:
-            print("{} by {}".format(plugin.name.upper(), plugin.author))
+            print(f"{plugin.name.upper()} by {plugin.author}")
 
         print("-" * 10)
         # print("Ending my application")
@@ -93,15 +93,15 @@ class ChromaApplication:
                         self.enabledMic = False
                         gui.activate_mic_indicator()
 
-                        print("\nPreliminary Result: {}".format(text))
+                        print(f"\nPreliminary Result: {text}")
 
                         # Replacing each misspelled word with the correct word
                         start: int = time.perf_counter_ns()
-                        for eachWord in (x for x in listOfMisspells if " {} ".format(x) in " {} ".format(text)):
+                        for eachWord in (x for x in listOfMisspells if f" {x} " in f" {text} "):
                             text = text.replace(eachWord, listOfMisspells.get(eachWord))
 
-                        print("Time taken to replace words: {} nanoseconds".format(time.perf_counter_ns() - start))
-                        print("Final Result: {}".format(text))
+                        print(f"Time taken to replace words: {time.perf_counter_ns() - start} nanoseconds")
+                        print(f"Final Result: {text}")
 
                         # If the first word is a keyword, then it will start a new thread which
                         # runs the associated plugin

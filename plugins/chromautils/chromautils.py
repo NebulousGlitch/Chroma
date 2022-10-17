@@ -67,9 +67,9 @@ class Plugin:
                 if newText == eachKey:
                     newText = self.listOfMispells[eachKey]
             try:
-                os.system('start {}:'.format(newText))
+                os.system(f'start {newText}:')
             except Exception as e:
-                print("Program {} does not exist".format(newText))
+                print(f"Program {newText} does not exist")
 
     def exit(self):
         _thread.interrupt_main()
@@ -78,4 +78,4 @@ class Plugin:
         chromaapplication.dictate = True
 
     def close(self, text):
-        subprocess.call("taskkill /f /im {}.exe".format(text), shell=True)
+        subprocess.call(f"taskkill /f /im {text}.exe", shell=True)
