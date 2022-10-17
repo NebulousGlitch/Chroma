@@ -3,21 +3,23 @@ import _thread
 import webbrowser
 import chromaapplication
 from pydictionary import Dictionary
-
+import keyboard
 import tts
+import subprocess
 
 
 class Plugin:
     name = "chromautils"
-    keywords = {"chromautils":True, "open":True, "exit":True, "dictate":True, "opening":True, "definition of":False, "define":True}
+    keywords = {"close": True, "chromautils": True, "open": True, "exit": True, "dictate": True, "opening": True,
+                "definition of": False, "define": True}
     author = "neb"
     version = 0.01
     commands = []
 
     listOfMispells = {"spot a thigh": "Spotify", "spot of i": "Spotify", "spot if i": "Spotify",
                       "spot a fire": "Spotify", "bonafide": "Spotify", "spot of fi": "Spotify",
-                      "to escort":"discord", "a bolton": "Ableton", "able to":"Ableton", "calculate":"Calculator",
-                      "spot i" : "Spotify"}
+                      "to escort": "discord", "a bolton": "Ableton", "able to": "Ableton", "calculate": "Calculator",
+                      "spot i": "Spotify"}
     webBrowsers = ["chrome", "edge", "microsoft edge", "firefox", "crown"]
     explorerList = {"file explorer", "explorer", "files", "file explore", "file explore rare", "thousand four",
                     "fox four", "fox four" "thoughts for", "packs for", "thanks for", "fire spoiler"}
@@ -30,6 +32,14 @@ class Plugin:
             self.exit()
         if text.split(" ")[0] == "dictate":
             self.dictate()
+        if "close" in text:
+            if text == "close":
+                keyboard.press('alt')
+                keyboard.press('f4')
+                keyboard.release('f4')
+                keyboard.release('alt')
+            else:
+                self.close("".join(text.split(" ")[1]))
         if "definition of" in text or "define" in text.split(" ")[0]:
             if "definition of" in text:
                 print(text.split("definition of ")[1])
@@ -66,3 +76,6 @@ class Plugin:
 
     def dictate(self):
         chromaapplication.dictate = True
+
+    def close(self, text):
+        subprocess.call("taskkill /f /im {}.exe".format(text), shell=True)

@@ -1,8 +1,10 @@
 import os
 import sys
+import threading
 import keyboard
-from chromaapplication import ChromaApplication
 
+from chromaapplication import ChromaApplication
+from gui import GUI
 
 if __name__ == "__main__":
     # getting list of plugins
@@ -14,6 +16,13 @@ if __name__ == "__main__":
 
     app = ChromaApplication(plugins)
     keyboard.add_hotkey("ctrl+space", app.enable_mic)
-    # Running our application
-    app.run()
+    threading.Thread(target=app.run, daemon=True).start()
+    gui = GUI()
+    gui.initialize()
+
+
+
+
+
+
 

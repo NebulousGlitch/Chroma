@@ -8,14 +8,18 @@ from playsound import playsound
 from sys import getsizeof
 
 # When set to true, program loop will enter a dictate mode where the keyboard types what the user is saying
+import gui
+
 dictate: bool = False
 
 # A dictionary with commonly misspelled names / programs / words
 listOfMisspells: dict = {"spot a thigh": "Spotify", "spot of i": "Spotify", "spot if i": "Spotify",
                          "spot a fire": "Spotify", "bonafide": "Spotify", "spot of fi": "Spotify",
                          "to escort": "discord", "a bolton": "Ableton", "able to": "Ableton", "calculate": "Calculator",
-                         "spot i": "Spotify", "hoping": "open", "mark a player": "Markiplier", "market blair": "Markiplier",
-                         "you too": "Youtube", "you tube": "Youtube", "birch": "search", "you to": "Youtube", "explore": "Explorer"}
+                         "spot i": "Spotify", "hoping": "open", "mark a player": "Markiplier",
+                         "market blair": "Markiplier", "spot a fight": "Spotify", "spot a hi": "Spotify",
+                         "you too": "Youtube", "you tube": "Youtube", "birch": "search", "you to": "Youtube",
+                         "explore": "Explorer"}
 print("Allocated bytes for dictionary: {}".format(getsizeof(listOfMisspells)))
 
 # Able to access what the current word stream up until the final result
@@ -23,13 +27,12 @@ currentWordStream: str = ""
 
 
 class ChromaApplication:
+    enabledMic = False
     SetLogLevel(-1)
     model = Model("./models/vosk-model-small-en-us-0.15")
     recognizer = KaldiRecognizer(model, 16000)
     mic = PyAudio()
     stream = mic.open(format=paInt16, channels=1, rate=16000, input=True, frames_per_buffer=4096)
-    stream.stop_stream()
-
     possibleKeywords = {}
 
     # constructor for application which takes a list of plugins
@@ -51,8 +54,6 @@ class ChromaApplication:
 
     def run(self, stream=stream, recognizer=recognizer):
 
-        global dictate
-        global currentWordStream
 
         print("Starting my application")
         print("-" * 10)
@@ -66,6 +67,9 @@ class ChromaApplication:
         print()
 
         while True:
+            global dictate
+            global currentWordStream
+
             if dictate is True:
                 if stream.is_stopped():
                     stream.start_stream()
@@ -80,12 +84,14 @@ class ChromaApplication:
                         keyboard.write(text + " ")
 
             else:
-                if stream.is_active():
-                    data: bytes = stream.read(4096, exception_on_overflow=False)
+                if self.enabledMic:
+                    data = stream.read(4096, exception_on_overflow=False)
 
                     if recognizer.AcceptWaveform(data):
 
                         text: str = recognizer.Result()[14:-3]
+                        self.enabledMic = False
+                        gui.activate_mic_indicator()
 
                         print("\nPreliminary Result: {}".format(text))
 
@@ -116,7 +122,6 @@ class ChromaApplication:
                                     break
 
                         currentWordStream = ""
-                        stream.stop_stream()
                         playsound("./assets/sfx/voiceoff.mp3", False)
 
                     else:
@@ -127,10 +132,12 @@ class ChromaApplication:
 
     def enable_mic(self):
         if not dictate:
-            if self.stream.is_stopped():
-                self.stream.start_stream()
+            if self.enabledMic is False:
+                print("STARTING MIC")
+                self.enabledMic = True
                 playsound("./assets/sfx/voiceon.mp3", False)
+                gui.activate_mic_indicator()
 
-            else:
-                self.stream.stop_stream()
-                playsound("./assets/sfx/voiceoff.mp3", False)
+
+
+
